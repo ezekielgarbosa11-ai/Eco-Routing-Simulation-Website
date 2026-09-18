@@ -4,20 +4,20 @@ function calculateDelay(distance, v, hardwareDelay) {
 }
 
 // POWER MODEL - baseline + congestion-dependent + small distance adjustment
-function calculatePower(basePower, dynamicPower, utilization, distance, distanceFactor) {
-  return basePower + dynamicPower * utilization + distance * distanceFactor;
+function calculatePower(basePower, dynamicPower, utilization, distance,) {
+  return basePower + dynamicPower * utilization + distance;
 }
 
 // FORMULA FOR CARBON COST - FORMULA 4 (unit-corrected: joules -> kWh)
 function calculateCarbon(power, deltaT, cef) {
   const energyJoules = power * deltaT;
   const energyKWh = energyJoules / 3600000;
-  return energyKWh * cef;
+  const carbonKg = energyKWh * cef;
+  return carbonKg * 1000; // convert kg to grams
 }
 
 const basePower = 52;           // watts, Cisco Catalyst 1300 baseline (per datasheet)
-const dynamicPower = 200;       // watts, extra draw when a link is fully congested
-const distanceFactor = 0.00001; // watts per meter, small realism adjustment
+const dynamicPower = 5;       // watts, extra draw when a link is fully congested
 const cef = 0.672;              // kg CO2 per kWh, Philippines grid average
 const packetSize = 1500 * 8;
 const bandwidth = 3.5 * 10 ** 6; // DepEd Order No. 46, s. 2011
@@ -196,7 +196,7 @@ function renderScenarioResult(result, ratio, budget) {
   const unconstrained = scenarioResults[0].result;
 
   if (!result.feasible) {
-    output.innerHTML = `<p class="empty-note">No feasible route at this carbon budget${budget ? ` (${budget.toExponential(3)} kg)` : ""}.</p>`;
+    output.innerHTML = `<p class="empty-note">No feasible route at this carbon budget${budget ? ` (${budget.toExponential(3)} g)` : ""}.</p>`;
     return;
   }
 
@@ -212,7 +212,7 @@ function renderScenarioResult(result, ratio, budget) {
   output.innerHTML = `
     <div class="route">${route}</div>
     <div class="row"><span class="label">Delay</span><span>${result.bestDelay.toFixed(7)} s</span></div>
-    <div class="row"><span class="label">Carbon</span><span>${result.bestCarbon.toExponential(4)} kg</span></div>
+    <div class="row"><span class="label">Carbon</span><span>${result.bestCarbon.toExponential(4)} g</span></div>  
     ${tradeoffLine}
   `;
 }
